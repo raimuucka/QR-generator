@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - QR Generator</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Register</h1>
+        <form id="registerForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <input type="password" id="passwordConfirm" placeholder="Confirm Password" required>
+            <button type="submit">Register</button>
+        </form>
+        <p><a href="/index.html">Back to Login</a></p>
+        <div id="message"></div>
+    </div>
+    <script src="/js/auth.js"></script>
+</body>
+</html>

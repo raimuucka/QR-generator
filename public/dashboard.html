@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - QR Generator</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard</h1>
+        <button id="createQrBtn">Create New QR Code</button>
+        <a href="/tutorial.html">Tutorial</a> | <a href="#" id="logout">Logout</a>
+        <table id="qrTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Destination</th>
+                    <th>Created At</th>
+                    <th>QR Code (PNG)</th>
+                    <th>QR Code (SVG)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <script src="/js/qr.js"></script>
+</body>
+</html>
