@@ -69,3 +69,12 @@ th {
     max-width: 200px;
     margin: 10px 0;
 }
+
+#qrResult button {
+    margin-right: 10px;
+}
+
+.actions button {
+    padding: 5px 10px;
+    margin-right: 5px;
+}

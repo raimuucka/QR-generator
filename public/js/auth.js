@@ -1,10 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
     const messageDiv = document.getElementById('message');
-    const token = localStorage.getItem('token');
 
-    if (token && window.location.pathname === '/index.html') {
-        window.location.href = '/dashboard.html';
-    }
+    // Check if already logged in (server will validate cookie)
+    fetch('/api/qr/dashboard', { credentials: 'include' })
+        .then((res) => {
+            if (res.ok && window.location.pathname === '/index.html') {
+                window.location.href = '/dashboard.html';
+            }
+        })
+        .catch(() => { });
 
     // Login
     const loginForm = document.getElementById('loginForm');
@@ -17,12 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Send cookies
                 body: JSON.stringify({ username, password }),
             });
             const data = await res.json();
 
             if (res.ok) {
-                localStorage.setItem('token', data.token);
                 window.location.href = '/dashboard.html';
             } else {
                 messageDiv.textContent = data.message;
@@ -43,12 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ username, email, password, passwordConfirm }),
             });
             const data = await res.json();
 
             if (res.ok) {
-                localStorage.setItem('token', data.token);
                 window.location.href = '/dashboard.html';
             } else {
                 messageDiv.textContent = data.message;

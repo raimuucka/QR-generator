@@ -11,13 +11,14 @@
         <h1>Create QR Code</h1>
         <form id="createQrForm">
             <input type="url" id="destination" placeholder="Destination URL" required>
-            <button type="submit">Generate QR Code</button>
+            <button type="submit">Generate Preview</button>
         </form>
         <p><a href="/dashboard.html">Back to Dashboard</a></p>
-        <div id="qrResult">
+        <div id="qrResult" style="display: none;">
             <h3>Generated QR Code</h3>
             <img id="qrPng" alt="QR Code PNG">
             <div id="qrSvg"></div>
+            <button id="saveQr">Save</button>
             <button id="downloadPng">Download PNG</button>
             <button id="downloadSvg">Download SVG</button>
         </div>
