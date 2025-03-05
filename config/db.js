@@ -3,16 +3,15 @@ const path = require('path');
 
 const dbPath = path.resolve(__dirname, '../', process.env.DB_PATH);
 const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error connecting to SQLite:', err.message);
-    process.exit(1);
-  }
-  console.log('Connected to SQLite database');
+    if (err) {
+        console.error('Error connecting to SQLite:', err.message);
+        process.exit(1);
+    }
+    console.log('Connected to SQLite database');
 });
 
-// Create Tables
 db.serialize(() => {
-  db.run(`
+    db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -23,13 +22,14 @@ db.serialize(() => {
     )
   `);
 
-  db.run(`
+    db.run(`
     CREATE TABLE IF NOT EXISTS qr_codes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
       destination TEXT NOT NULL,
       qrImage TEXT,
       qrSVG TEXT,
+      qrJPG TEXT,  -- Added JPG column
       createdAt INTEGER DEFAULT (strftime('%s', 'now')),
       FOREIGN KEY (userId) REFERENCES users(id)
     )

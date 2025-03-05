@@ -78,3 +78,30 @@ th {
     padding: 5px 10px;
     margin-right: 5px;
 }
+
+.destination {
+    display: flex;
+    flex-direction: column;
+}
+
+    .destination span {
+        font-size: 0.8em;
+        color: #666;
+    }
+
+.download-links {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+    .download-links a {
+        font-size: 0.9em;
+        text-decoration: none;
+        color: #007bff;
+    }
+
+        .download-links a:hover {
+            text-decoration: underline;
+        }

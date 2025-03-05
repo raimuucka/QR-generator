@@ -45,7 +45,11 @@ router.post('/create', authMiddleware, async (req, res) => {
             type: 'svg',
             errorCorrectionLevel: 'H',
         });
-        res.json({ destination, qrImage, qrSVG }); // Temporary preview, not saved yet
+        const qrJPG = await QRCode.toDataURL(`http://localhost:3000/qr/temp-${Date.now()}`, {
+            errorCorrectionLevel: 'H',
+            type: 'image/jpeg', // Add JPG format
+        });
+        res.json({ destination, qrImage, qrSVG, qrJPG });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
     }
@@ -68,12 +72,16 @@ router.post('/save', authMiddleware, async (req, res) => {
                     type: 'svg',
                     errorCorrectionLevel: 'H',
                 });
+                const qrJPG = await QRCode.toDataURL(`http://localhost:3000/qr/${qrId}`, {
+                    errorCorrectionLevel: 'H',
+                    type: 'image/jpeg',
+                });
                 db.run(
-                    'UPDATE qr_codes SET qrImage = ?, qrSVG = ? WHERE id = ?',
-                    [qrImage, qrSVG, qrId],
+                    'UPDATE qr_codes SET qrImage = ?, qrSVG = ?, qrJPG = ? WHERE id = ?',
+                    [qrImage, qrSVG, qrJPG, qrId],
                     (err) => {
                         if (err) return res.status(500).json({ message: 'Server error' });
-                        res.json({ id: qrId, destination, qrImage, qrSVG });
+                        res.json({ id: qrId, destination, qrImage, qrSVG, qrJPG });
                     }
                 );
             }
@@ -110,14 +118,18 @@ router.put('/edit/:id', authMiddleware, async (req, res) => {
             type: 'svg',
             errorCorrectionLevel: 'H',
         });
+        const qrJPG = await QRCode.toDataURL(`http://localhost:3000/qr/${id}`, {
+            errorCorrectionLevel: 'H',
+            type: 'image/jpeg',
+        });
         db.run(
-            'UPDATE qr_codes SET destination = ?, qrImage = ?, qrSVG = ? WHERE id = ? AND userId = ?',
-            [destination, qrImage, qrSVG, id, req.user.id],
+            'UPDATE qr_codes SET destination = ?, qrImage = ?, qrSVG = ?, qrJPG = ? WHERE id = ? AND userId = ?',
+            [destination, qrImage, qrSVG, qrJPG, id, req.user.id],
             function (err) {
                 if (err || this.changes === 0) {
                     return res.status(404).json({ message: 'QR code not found or unauthorized' });
                 }
-                res.json({ id, destination, qrImage, qrSVG });
+                res.json({ id, destination, qrImage, qrSVG, qrJPG });
             }
         );
     } catch (err) {
@@ -138,6 +150,7 @@ router.get('/tutorial', (req, res) => {
       3. **Download Formats**:
          - **PNG**: Raster image, widely supported.
          - **SVG**: Vector format, scalable without quality loss.
+         - **JPG**: Compressed raster format.
       4. **Edit/Delete**: Use the buttons on the dashboard to modify or remove QR codes.
     `,
     });

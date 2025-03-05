@@ -27,10 +27,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
             <td>${qr.id}</td>
-            <td>${qr.destination}</td>
-            <td>${new Date(qr.createdAt).toLocaleString()}</td>
-            <td><img src="${qr.qrImage}" alt="QR PNG" style="max-width: 100px;"></td>
-            <td><div>${qr.qrSVG}</div></td>
+            <td class="destination">
+              ${qr.destination}
+              <span>${new Date(qr.createdAt).toLocaleString()}</span>
+            </td>
+            <td>
+              <div>${qr.qrSVG}</div>
+              <div class="download-links">
+                <a href="${qr.qrSVG}" download="qr_code_${qr.id}.svg">Download SVG</a>
+                <a href="${qr.qrImage}" download="qr_code_${qr.id}.png">Download PNG</a>
+                <a href="${qr.qrJPG}" download="qr_code_${qr.id}.jpg">Download JPG</a>
+              </div>
+            </td>
             <td class="actions">
               <button onclick="editQr(${qr.id}, '${qr.destination}')">Edit</button>
               <button onclick="deleteQr(${qr.id})">Delete</button>
