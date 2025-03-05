@@ -27,9 +27,8 @@ db.serialize(() => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       userId INTEGER NOT NULL,
       destination TEXT NOT NULL,
-      qrImage TEXT,
-      qrSVG TEXT,
-      qrJPG TEXT,  -- Added JPG column
+      qrImage TEXT,  -- PNG data URL
+      qrSVG TEXT,    -- SVG data URL
       createdAt INTEGER DEFAULT (strftime('%s', 'now')),
       FOREIGN KEY (userId) REFERENCES users(id)
     )

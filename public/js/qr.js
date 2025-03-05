@@ -26,24 +26,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.forEach((qr) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-          <td>${qr.id}</td>
-          <td class="destination">
-            ${qr.destination}
-            <span>${new Date(qr.createdAt).toLocaleString()}</span>
-          </td>
-          <td>
-            <img src="${qr.qrSVG}" alt="QR Code SVG" class="qr-code">
-            <div class="download-links">
-              <a href="${qr.qrSVG}" download="qr_code_${qr.id}.svg">SVG</a>
-              <a href="${qr.qrImage}" download="qr_code_${qr.id}.png">PNG</a>
-              <a href="${qr.qrJPG}" download="qr_code_${qr.id}.jpg">JPG</a>
-            </div>
-          </td>
-          <td class="actions">
-            <button onclick="editQr(${qr.id}, '${qr.destination}')">Edit</button>
-            <button onclick="deleteQr(${qr.id})">Delete</button>
-          </td>
-        `;
+            <td>${qr.id}</td>
+            <td class="destination">
+              ${qr.destination}
+              <span>${new Date(qr.createdAt).toLocaleString()}</span>
+            </td>
+            <td>
+              <img src="${qr.qrSVG}" alt="QR Code SVG" class="qr-code">
+              <div class="download-links" style="text-align: center;">
+                <a href="${qr.qrSVG}" download="qr_code_${qr.id}.svg">SVG</a> | <a href="${qr.qrImage}" download="qr_code_${qr.id}.png">PNG</a>
+              </div>
+            </td>
+            <td class="actions">
+              <button onclick="editQr(${qr.id}, '${qr.destination}')">Edit</button>
+              <button onclick="deleteQr(${qr.id})">Delete</button>
+            </td>
+          `;
                     tbody.appendChild(row);
                 });
             })
