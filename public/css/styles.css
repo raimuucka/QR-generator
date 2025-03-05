@@ -79,6 +79,10 @@ th {
     margin-right: 5px;
 }
 
+.qr-code {
+    max-width: 150px; /* 50% of the original size (assuming original was ~200px) */
+}
+
 .destination {
     display: flex;
     flex-direction: column;

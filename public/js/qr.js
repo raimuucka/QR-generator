@@ -26,24 +26,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.forEach((qr) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-            <td>${qr.id}</td>
-            <td class="destination">
-              ${qr.destination}
-              <span>${new Date(qr.createdAt).toLocaleString()}</span>
-            </td>
-            <td>
-              <div>${qr.qrSVG}</div>
-              <div class="download-links">
-                <a href="${qr.qrSVG}" download="qr_code_${qr.id}.svg">Download SVG</a>
-                <a href="${qr.qrImage}" download="qr_code_${qr.id}.png">Download PNG</a>
-                <a href="${qr.qrJPG}" download="qr_code_${qr.id}.jpg">Download JPG</a>
-              </div>
-            </td>
-            <td class="actions">
-              <button onclick="editQr(${qr.id}, '${qr.destination}')">Edit</button>
-              <button onclick="deleteQr(${qr.id})">Delete</button>
-            </td>
-          `;
+          <td>${qr.id}</td>
+          <td class="destination">
+            ${qr.destination}
+            <span>${new Date(qr.createdAt).toLocaleString()}</span>
+          </td>
+          <td>
+            <img src="${qr.qrSVG}" alt="QR Code SVG" class="qr-code">
+            <div class="download-links">
+              <a href="${qr.qrSVG}" download="qr_code_${qr.id}.svg">SVG</a>
+              <a href="${qr.qrImage}" download="qr_code_${qr.id}.png">PNG</a>
+              <a href="${qr.qrJPG}" download="qr_code_${qr.id}.jpg">JPG</a>
+            </div>
+          </td>
+          <td class="actions">
+            <button onclick="editQr(${qr.id}, '${qr.destination}')">Edit</button>
+            <button onclick="deleteQr(${qr.id})">Delete</button>
+          </td>
+        `;
                     tbody.appendChild(row);
                 });
             })
@@ -69,11 +69,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ destination }),
             });
             const data = await res.json();
+            console.log('Received QR data:', data); // Debug log
 
             if (res.ok) {
                 currentQrData = data;
-                document.getElementById('qrPng').src = data.qrImage;
-                document.getElementById('qrSvg').innerHTML = data.qrSVG;
+                const qrPng = document.getElementById('qrPng');
+                const qrSvg = document.getElementById('qrSvg');
+                qrPng.src = data.qrImage;
+                qrSvg.innerHTML = ''; // Clear any existing content
+                // Display SVG as an image using the data URL
+                const svgImg = new Image();
+                svgImg.src = data.qrSVG;
+                svgImg.style.maxWidth = '200px'; // Match PNG size
+                qrSvg.appendChild(svgImg);
                 document.getElementById('qrResult').style.display = 'block';
 
                 document.getElementById('downloadPng').onclick = () => {
@@ -84,7 +92,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
 
                 document.getElementById('downloadSvg').onclick = () => {
-                    const blob = new Blob([data.qrSVG], { type: 'image/svg+xml' });
+                    // Extract base64 data from the data URL and create a Blob
+                    const base64Data = data.qrSVG.split(',')[1]; // Get the base64 part
+                    const byteCharacters = atob(base64Data); // Decode base64 to binary string
+                    const byteArrays = new Uint8Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteArrays[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const blob = new Blob([byteArrays], { type: 'image/svg+xml' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;

@@ -20,7 +20,7 @@ const authMiddleware = (req, res, next) => {
 // Get Dashboard
 router.get('/dashboard', authMiddleware, (req, res) => {
     db.all(
-        'SELECT id, destination, qrImage, qrSVG, createdAt FROM qr_codes WHERE userId = ?',
+        'SELECT id, destination, qrImage, qrSVG, qrJPG, createdAt FROM qr_codes WHERE userId = ?',
         [req.user.id],
         (err, rows) => {
             if (err) return res.status(500).json({ message: 'Server error' });
@@ -38,19 +38,29 @@ router.get('/dashboard', authMiddleware, (req, res) => {
 router.post('/create', authMiddleware, async (req, res) => {
     const { destination } = req.body;
     try {
+        console.log('Generating QR for destination:', destination); // Debug log
         const qrImage = await QRCode.toDataURL(`http://localhost:3000/qr/temp-${Date.now()}`, {
             errorCorrectionLevel: 'H',
         });
-        const qrSVG = await QRCode.toString(`http://localhost:3000/qr/temp-${Date.now()}`, {
+        // Generate raw SVG string and convert to data URL
+        const rawSvg = await QRCode.toString(`http://localhost:3000/qr/temp-${Date.now()}`, {
             type: 'svg',
             errorCorrectionLevel: 'H',
         });
+        const qrSVG = `data:image/svg+xml;base64,${Buffer.from(rawSvg).toString('base64')}`;
         const qrJPG = await QRCode.toDataURL(`http://localhost:3000/qr/temp-${Date.now()}`, {
             errorCorrectionLevel: 'H',
-            type: 'image/jpeg', // Add JPG format
+            type: 'image/jpeg',
+            quality: 0.9, // Ensure JPG quality is good
         });
+        console.log('Generated QR data:', {
+            qrImage: qrImage.substring(0, 50) + '...',
+            qrSVG: qrSVG.substring(0, 50) + '...',
+            qrJPG: qrJPG.substring(0, 50) + '...',
+        }); // Debug log
         res.json({ destination, qrImage, qrSVG, qrJPG });
     } catch (err) {
+        console.error('Error generating QR:', err);
         res.status(500).json({ message: 'Server error' });
     }
 });
@@ -68,13 +78,16 @@ router.post('/save', authMiddleware, async (req, res) => {
                 const qrImage = await QRCode.toDataURL(`http://localhost:3000/qr/${qrId}`, {
                     errorCorrectionLevel: 'H',
                 });
-                const qrSVG = await QRCode.toString(`http://localhost:3000/qr/${qrId}`, {
+                // Generate raw SVG string and convert to data URL
+                const rawSvg = await QRCode.toString(`http://localhost:3000/qr/${qrId}`, {
                     type: 'svg',
                     errorCorrectionLevel: 'H',
                 });
+                const qrSVG = `data:image/svg+xml;base64,${Buffer.from(rawSvg).toString('base64')}`;
                 const qrJPG = await QRCode.toDataURL(`http://localhost:3000/qr/${qrId}`, {
                     errorCorrectionLevel: 'H',
                     type: 'image/jpeg',
+                    quality: 0.9,
                 });
                 db.run(
                     'UPDATE qr_codes SET qrImage = ?, qrSVG = ?, qrJPG = ? WHERE id = ?',
@@ -114,13 +127,16 @@ router.put('/edit/:id', authMiddleware, async (req, res) => {
         const qrImage = await QRCode.toDataURL(`http://localhost:3000/qr/${id}`, {
             errorCorrectionLevel: 'H',
         });
-        const qrSVG = await QRCode.toString(`http://localhost:3000/qr/${id}`, {
+        // Generate raw SVG string and convert to data URL
+        const rawSvg = await QRCode.toString(`http://localhost:3000/qr/${id}`, {
             type: 'svg',
             errorCorrectionLevel: 'H',
         });
+        const qrSVG = `data:image/svg+xml;base64,${Buffer.from(rawSvg).toString('base64')}`;
         const qrJPG = await QRCode.toDataURL(`http://localhost:3000/qr/${id}`, {
             errorCorrectionLevel: 'H',
             type: 'image/jpeg',
+            quality: 0.9,
         });
         db.run(
             'UPDATE qr_codes SET destination = ?, qrImage = ?, qrSVG = ?, qrJPG = ? WHERE id = ? AND userId = ?',
@@ -148,8 +164,8 @@ router.get('/tutorial', (req, res) => {
          - Enter the destination URL (e.g., https://example.com).
          - Preview the QR code, then click "Save" to store it.
       3. **Download Formats**:
-         - **PNG**: Raster image, widely supported.
          - **SVG**: Vector format, scalable without quality loss.
+         - **PNG**: Raster image, widely supported.
          - **JPG**: Compressed raster format.
       4. **Edit/Delete**: Use the buttons on the dashboard to modify or remove QR codes.
     `,
