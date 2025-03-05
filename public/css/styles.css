@@ -97,7 +97,7 @@ th {
     display: flex;
     justify-content: center; /* Center the links horizontally */
     gap: 5px;
-    margin-top: 0px;
+    margin-top: 5px;
 }
 
     .download-links a {

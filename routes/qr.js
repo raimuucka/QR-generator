@@ -1,7 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const QRCode = require('qrcode');
-const sharp = require('sharp'); // For image conversion
 const db = require('../config/db');
 const router = express.Router();
 
@@ -18,30 +17,10 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-// Utility function to convert SVG to PNG data URL with specified size
-async function convertSvgToPng(svgString, width = 300) {
-    try {
-        // Convert SVG to Buffer
-        const svgBuffer = Buffer.from(svgString);
-
-        // Convert to PNG with specified size
-        const pngBuffer = await sharp(svgBuffer)
-            .resize(width, width) // Resize to 300x300 pixels
-            .png()
-            .toBuffer();
-        const pngDataUrl = `data:image/png;base64,${pngBuffer.toString('base64')}`;
-
-        return pngDataUrl;
-    } catch (err) {
-        console.error('Error converting SVG to PNG:', err);
-        throw err;
-    }
-}
-
 // Get Dashboard
 router.get('/dashboard', authMiddleware, (req, res) => {
     db.all(
-        'SELECT id, destination, qrImage, qrSVG, createdAt FROM qr_codes WHERE userId = ?',
+        'SELECT id, destination, qrSVG, createdAt FROM qr_codes WHERE userId = ?',
         [req.user.id],
         (err, rows) => {
             if (err) return res.status(500).json({ message: 'Server error' });
@@ -65,16 +44,15 @@ router.post('/create', authMiddleware, async (req, res) => {
             type: 'svg',
             errorCorrectionLevel: 'H',
         });
-        const qrSVG = `data:image/svg+xml;base64,${Buffer.from(rawSvg).toString('base64')}`;
-
-        // Convert SVG to PNG with 300x300 size
-        const qrImage = await convertSvgToPng(rawSvg, 300);
+        // Wrap SVG in XML declaration and ensure namespace
+        const wrappedSvg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges">${rawSvg}</svg>`;
+        console.log('Wrapped Raw SVG:', wrappedSvg.substring(0, 200) + '...'); // Debug log to inspect SVG
+        const qrSVG = `data:image/svg+xml;base64,${Buffer.from(wrappedSvg).toString('base64')}`;
 
         console.log('Generated QR data:', {
             qrSVG: qrSVG.substring(0, 100) + '...',
-            qrImage: qrImage.substring(0, 100) + '...',
         }); // Debug log
-        res.json({ destination, qrImage, qrSVG });
+        res.json({ destination, qrSVG });
     } catch (err) {
         console.error('Error generating QR:', err);
         res.status(500).json({ message: 'Server error' });
@@ -96,17 +74,17 @@ router.post('/save', authMiddleware, async (req, res) => {
                     type: 'svg',
                     errorCorrectionLevel: 'H',
                 });
-                const qrSVG = `data:image/svg+xml;base64,${Buffer.from(rawSvg).toString('base64')}`;
-
-                // Convert SVG to PNG with 300x300 size
-                const qrImage = await convertSvgToPng(rawSvg, 300);
+                // Wrap SVG in XML declaration and ensure namespace
+                const wrappedSvg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges">${rawSvg}</svg>`;
+                console.log('Wrapped Raw SVG:', wrappedSvg.substring(0, 200) + '...'); // Debug log to inspect SVG
+                const qrSVG = `data:image/svg+xml;base64,${Buffer.from(wrappedSvg).toString('base64')}`;
 
                 db.run(
-                    'UPDATE qr_codes SET qrImage = ?, qrSVG = ? WHERE id = ?',
-                    [qrImage, qrSVG, qrId],
+                    'UPDATE qr_codes SET qrSVG = ? WHERE id = ?',
+                    [qrSVG, qrId],
                     (err) => {
                         if (err) return res.status(500).json({ message: 'Server error' });
-                        res.json({ id: qrId, destination, qrImage, qrSVG });
+                        res.json({ id: qrId, destination, qrSVG });
                     }
                 );
             }
@@ -141,19 +119,19 @@ router.put('/edit/:id', authMiddleware, async (req, res) => {
             type: 'svg',
             errorCorrectionLevel: 'H',
         });
-        const qrSVG = `data:image/svg+xml;base64,${Buffer.from(rawSvg).toString('base64')}`;
-
-        // Convert SVG to PNG with 300x300 size
-        const qrImage = await convertSvgToPng(rawSvg, 300);
+        // Wrap SVG in XML declaration and ensure namespace
+        const wrappedSvg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41 41" shape-rendering="crispEdges">${rawSvg}</svg>`;
+        console.log('Wrapped Raw SVG:', wrappedSvg.substring(0, 200) + '...'); // Debug log to inspect SVG
+        const qrSVG = `data:image/svg+xml;base64,${Buffer.from(wrappedSvg).toString('base64')}`;
 
         db.run(
-            'UPDATE qr_codes SET destination = ?, qrImage = ?, qrSVG = ? WHERE id = ? AND userId = ?',
-            [destination, qrImage, qrSVG, id, req.user.id],
+            'UPDATE qr_codes SET destination = ?, qrSVG = ? WHERE id = ? AND userId = ?',
+            [destination, qrSVG, id, req.user.id],
             function (err) {
                 if (err || this.changes === 0) {
                     return res.status(404).json({ message: 'QR code not found or unauthorized' });
                 }
-                res.json({ id, destination, qrImage, qrSVG });
+                res.json({ id, destination, qrSVG });
             }
         );
     } catch (err) {
@@ -173,7 +151,7 @@ router.get('/tutorial', (req, res) => {
          - Preview the QR code, then click "Save" to store it.
       3. **Download Formats**:
          - **SVG**: Vector format, scalable without quality loss.
-         - **PNG**: Raster image, widely supported (300x300 px).
+         - **PNG**: Raster image, generated client-side (300x300 px).
       4. **Edit/Delete**: Use the buttons on the dashboard to modify or remove QR codes.
     `,
     });

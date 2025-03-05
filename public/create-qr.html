@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create QR Code - QR Generator</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <!-- Remove canvg and add html2canvas -->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -16,8 +18,7 @@
         <p><a href="/dashboard.html">Back to Dashboard</a></p>
         <div id="qrResult" style="display: none;">
             <h3>Generated QR Code</h3>
-            <img id="qrPng" alt="QR Code PNG">
-            <div id="qrSvg"></div>
+            <div id="qrSvg"></div> <!-- Only SVG is displayed, PNG generated client-side -->
             <button id="saveQr">Save</button>
             <button id="downloadPng">Download PNG</button>
             <button id="downloadSvg">Download SVG</button>

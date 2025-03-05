@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <td>
               <img src="${qr.qrSVG}" alt="QR Code SVG" class="qr-code">
               <div class="download-links" style="text-align: center;">
-                <a href="${qr.qrSVG}" download="qr_code_${qr.id}.svg">SVG</a> | <a href="${qr.qrImage}" download="qr_code_${qr.id}.png">PNG</a>
+                <a href="${qr.qrSVG}" download="qr_code_${qr.id}.svg">SVG</a> | <a href="#" onclick="downloadPng('${qr.qrSVG}', ${qr.id}); return false;">PNG</a>
               </div>
             </td>
             <td class="actions">
@@ -71,22 +71,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.ok) {
                 currentQrData = data;
-                const qrPng = document.getElementById('qrPng');
                 const qrSvg = document.getElementById('qrSvg');
-                qrPng.src = data.qrImage;
                 qrSvg.innerHTML = ''; // Clear any existing content
                 // Display SVG as an image using the data URL
                 const svgImg = new Image();
                 svgImg.src = data.qrSVG;
-                svgImg.style.maxWidth = '200px'; // Match PNG size
+                svgImg.style.maxWidth = '200px'; // Match PNG size (if displayed)
                 qrSvg.appendChild(svgImg);
                 document.getElementById('qrResult').style.display = 'block';
 
                 document.getElementById('downloadPng').onclick = () => {
-                    const link = document.createElement('a');
-                    link.href = data.qrImage;
-                    link.download = 'qr_code.png';
-                    link.click();
+                    downloadPng(data.qrSVG, null); // Use null for ID since it's a preview
+                    return false;
                 };
 
                 document.getElementById('downloadSvg').onclick = () => {
@@ -176,5 +172,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.editQr = (id, destination) => {
         window.location.href = `/edit-qr.html?id=${id}&destination=${encodeURIComponent(destination)}`;
+    };
+
+    // Function to convert SVG to PNG and download (client-side)
+    window.downloadPng = async (svgDataUrl, qrId) => {
+        try {
+            if (typeof html2canvas === 'undefined') {
+                throw new Error('html2canvas library is not loaded. Please check your internet connection or script inclusion.');
+            }
+
+            const base64Data = svgDataUrl.split(',')[1]; // Get the base64 part
+            const rawSvg = atob(base64Data); // Decode base64 to SVG string
+            console.log('Decoded SVG:', rawSvg.substring(0, 200) + '...'); // Debug log to inspect SVG
+
+            // Create a temporary SVG element and wrap it in a styled div to scale to 300x300
+            const svgWrapper = document.createElement('div');
+            svgWrapper.innerHTML = rawSvg;
+            svgWrapper.style.width = '300px'; // Force width to 300 pixels
+            svgWrapper.style.height = '300px'; // Force height to 300 pixels
+            svgWrapper.style.overflow = 'hidden'; // Prevent overflow
+            // Ensure the SVG scales to fit the wrapper while maintaining aspect ratio
+            const svgElement = svgWrapper.querySelector('svg');
+            if (svgElement) {
+                svgElement.style.width = '100%'; // Scale to full width of wrapper
+                svgElement.style.height = '100%'; // Scale to full height of wrapper
+                svgElement.style.objectFit = 'contain'; // Maintain aspect ratio and fit within bounds
+            }
+
+            document.body.appendChild(svgWrapper); // Temporarily add to DOM for rendering
+
+            // Use html2canvas to render the scaled SVG to a canvas at 300x300 pixels
+            const canvas = await html2canvas(svgWrapper, {
+                width: 300, // Set canvas width to 300 pixels
+                height: 300, // Set canvas height to 300 pixels
+                scale: 1, // Prevent scaling issues
+                useCORS: true, // Enable CORS if needed (for external resources, if any)
+                logging: true, // Enable logging for debugging
+                backgroundColor: null, // Transparent background to match SVG
+            });
+
+            // Remove the temporary SVG element
+            document.body.removeChild(svgWrapper);
+
+            // Convert canvas to PNG data URL
+            const pngDataUrl = canvas.toDataURL('image/png');
+
+            // Create a Blob from the PNG data URL and trigger download
+            const pngBase64 = pngDataUrl.split(',')[1];
+            const byteCharacters = atob(pngBase64);
+            const byteArrays = new Uint8Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteArrays[i] = byteCharacters.charCodeAt(i);
+            }
+            const blob = new Blob([byteArrays], { type: 'image/png' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = qrId ? `qr_code_${qrId}.png` : 'qr_code.png';
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Error converting SVG to PNG:', err);
+            alert('Failed to generate PNG. Please try again.');
+        }
     };
 });
